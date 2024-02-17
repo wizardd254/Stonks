@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WATCHLIST</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  </head>
+  <body>
+    <nav class="main-nav">
+      <div class="logo">
+        <img src="/logo1.png" alt="Loading.." />
+      </div>
+      <div class="menu-link">
+        <ul>
+          <li>
+            <a href="#">NEWS</a>
+            <ul class="dropdown">
+              <li><a href="#">IPO's</a></li>
+              <li><a href="#">Stocks</a></li>
+              <li><a href="#">Mutual Funds</a></li>
+            </ul>
+          </li>
+          <li>
+            <a href="#">LEARN</a>
+            <ul class="dropdown">
+              <li><a href="#">Online Trading</a></li>
+              <li><a href="#">Share Market</a></li>
+              <li><a href="#">Intraday Trading</a></li>
+            </ul>
+          </li>
+          <li>
+            <a href="/portfolio/<%= id %>">My Portfolio</a>
+          </li>
+        </ul>
+      </div>
+      <div class="menu-link2">
+        <ul>
+          <li><a href="#">Contact Us</a></li>
+          <li><a href="#">About Us</a></li>
+          <li><a href="#">Sign In/Join Now</a></li>
+        </ul>
+      </div>
+    </nav>
+    <h1>WATCHLIST</h1>
+    <div id="stockData" class="stock-container"></div>
+
+    <!-- The script tag is placed at the end of the body -->
+    <script >
+
+    
+    const stockDataDiv = document.getElementById('stockData');
+    const portfolioDiv = document.getElementById('portfolio');
+    let totalInvested = 0;
+    let totalReturns = 0;
+    let percReturns = 0;
+    let pricelist={};
+
+
+
+    const stocks = ['A', 'AAL']; // Array of stock symbols 
+    async function fetchFinanceData(symbol) {
+      const options = {
+        method: 'GET',
+        url: `https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/v2/get-summary`,
+        params: {
+          symbol: symbol,
+          region: 'IN'
+        },
+        headers: {
+          'X-RapidAPI-Key': '487eda1fa8msh7a9e5cedeee12bcp137eb0jsn25ff9cf41b02',
+          'X-RapidAPI-Host': 'apidojo-yahoo-finance-v1.p.rapidapi.com'
+        }
+      };
+
+      try {
+        const response = await axios.request(options);
+        return response.data; // Return the data for use in another function
+      } catch (error) {
+        console.error(error);
+        return null; // Return null if there was an error
+      }
+    }
+
+    async function displayAllStockData() {
+      for (const symbol of stocks) {
+        const data = await fetchFinanceData(symbol);
+        if (data) {
+          displayData(data, symbol);
+        }
+      }
+    }
+
+    function displayData(data, symbol) {
+      // Create a container div for each stock item
+      const stockItemDiv = document.createElement('div');
+      stockItemDiv.id = `stock-item-${symbol}`;
+      stockItemDiv.classList.add('stock-item'); // Assume 'stock-item' is a class in your CSS
+
+      // Check if the necessary data is available and construct the inner HTML of the stock item
+      if (data.price.regularMarketPrice.fmt) {
+        const marketPrice = data.price.regularMarketPrice.fmt; // Formatted price
+      
+
+        stockItemDiv.innerHTML = `
+          <h2>${symbol}</h2>
+          <p>Price: ${marketPrice}</p>`;
+      } else {
+        stockItemDiv.innerHTML = `
+          <h2>${symbol}</h2>
+          <p>No stock data available.</p>`;
+      }
+
+      // Create a button element with a unique id based on the symbol
+      const addbutton = document.createElement('button');
+      addbutton.id = `add-${symbol}`; // Use a different id than the input element
+      addbutton.classList.add('but');
+      addbutton.textContent = 'Add To Portfolio';
+      // Create saveButton outside the addbutton click event
+      const saveButton = document.createElement('button');
+      saveButton.textContent = 'Save';
+      addbutton.addEventListener('click', function () {
+        console.log('Hi');
+        const marketPrice = data.price.regularMarketPrice.fmt;
+        
+        saveButton.id = `save-${symbol}`;
+        stockItemDiv.innerHTML = `
+          <h2>${symbol}</h2>
+          <p>Price: ${marketPrice}</p>
+          <label for="quantity">Quantity:</label>
+          <input type="number" id="quantity" required>
+          <label for="price">Purchase Price:</label>
+          <input type="number" id="price" step="0.01" required>
+        `;
+        pricelist[symbol]=marketPrice;
+        localStorage.setItem('pricelist', JSON.stringify(pricelist));
+        stockItemDiv.appendChild(saveButton);
+      });
+
+      saveButton.addEventListener('click', async function () {
+        console.log('Hi');
+        const quantityInput = document.getElementById('quantity');
+        const priceInput = document.getElementById('price');
+        const quantity = parseInt(quantityInput.value, 10);
+        const purchasePrice = parseFloat(priceInput.value);
+        const marketPrice = data.price.regularMarketPrice.fmt;
+        stockItemDiv.innerHTML = `
+          <h2>${symbol}</h2>
+          <p>Price: ${marketPrice}</p>
+        `;
+        stockItemDiv.appendChild(addbutton);
+        // Check if quantity and purchase price are provided and are valid numbers
+            if (!isNaN(quantity) && !isNaN(purchasePrice)) {
+                // Send a POST request to /watchlist/:id
+                const response = await fetch("/watchlist/<%= id %>", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        symbol: symbol,
+                        quantity: quantity,
+                        purchasePrice: purchasePrice
+                    })
+                });
+                if (response.ok) {
+                    // Call saveToPortfolio with the entered information
+                    saveToPortfolio(symbol, quantity, purchasePrice);
+                } else {
+                    alert("Error saving data. Please try again.");
+                }
+            } else {
+                alert("Invalid input. Please enter valid quantity and purchase price.");
+            }
+      });
+
+      stockItemDiv.appendChild(addbutton);
+      stockDataDiv.appendChild(stockItemDiv);
+    }
+
+    function saveToPortfolio(symbol, quantity, purchasePrice) {
+      // Get the portfolio data from the local storage, or create an empty array if it does not exist
+      let portfolioData = JSON.parse(localStorage.getItem('portfolio')) || [];
+      
+      // Create an object to represent the new entry
+      const newEntry = {
+        symbol: symbol,
+        quantity: quantity,
+        purchasePrice: purchasePrice,
+      };
+
+      // Add the new entry to the portfolio data
+      portfolioData.push(newEntry);
+
+      // Save the updated portfolio data back to the local storage
+      localStorage.setItem('portfolio', JSON.stringify(portfolioData));
+
+    }
+    function updateDisplayValues() {
+        totalInvested=totalInvested.toFixed(2);
+        totalReturns=totalReturns.toFixed(2);
+        percReturns=(totalReturns/totalInvested)*100
+        document.getElementById('return').innerHTML = `$ ${totalInvested}`;
+        document.getElementById('avg').innerHTML = `$ ${totalReturns}`;
+        if(totalInvested>0){
+        document.getElementById('perc').innerHTML=`${percReturns.toFixed(2)}%`;
+        }
+        else{
+            document.getElementById('perc').innerHTML=`0%`;
+        }
+        localStorage.setItem('totalInvested', totalInvested);
+      localStorage.setItem('totalReturns', totalReturns);
+
+    }
+
+    // Load the portfolio data when the page loads
+    async function loadPortfolio() {
+        //calculating again
+        totalInvested = 0;
+        totalReturns = 0;
+
+      // Get the portfolio data from the local storage, or create an empty array if it does not exist
+      let portfolioData = JSON.parse(localStorage.getItem('portfolio')) || [];
+      const pricelist = JSON.parse(localStorage.getItem('pricelist'));
+
+      //await Promise.all(portfolioData.map(item => fetchFinanceData(item.symbol)));
+
+      // Loop through the portfolio data and fetch the stock data for each symbol
+      for (let portfolioItem of portfolioData) {
+        totalInvested += portfolioItem.purchasePrice * portfolioItem.quantity;
+      
+            if (pricelist[portfolioItem.symbol]) {
+                totalReturns += (pricelist[portfolioItem.symbol] * portfolioItem.quantity) - (portfolioItem.purchasePrice * portfolioItem.quantity);
+            }
+        const { symbol,quantity, purchasePrice } = portfolioItem;
+        if (symbol) {
+          displayData1(symbol, quantity, purchasePrice);
+        }
+      }
+      updateDisplayValues(); 
+    }
+
+    function removeFromPortfolio(symbol) {
+        // Get the portfolio data from the local storage
+        let portfolioData = JSON.parse(localStorage.getItem('portfolio')) || [];
+        const pricelist = JSON.parse(localStorage.getItem('pricelist'));
+        // Find the index of the portfolio item with the matching symbol
+        const index = portfolioData.findIndex(item => item.symbol === symbol);
+      
+        if (index !== -1) {
+          // Remove the item from the portfolio data
+          let removedItem = portfolioData[index];
+          totalInvested -= removedItem.purchasePrice * removedItem.quantity;
+          totalReturns -= (pricelist[removedItem.symbol] * removedItem.quantity) - (removedItem.purchasePrice * removedItem.quantity);
+          updateDisplayValues(); 
+          portfolioData.splice(index, 1);
+          
+          // Save the updated portfolio data back to the local storage
+          localStorage.setItem('portfolio', JSON.stringify(portfolioData));
+          const elementToRemove = document.getElementById(`stock-item-${symbol}`);
+          if (elementToRemove) {
+              elementToRemove.remove();
+          }
+        } else {
+          console.log(`Symbol ${symbol} not found in the portfolio.`);
+        }
+      }
+      
+
+    // Conditionally call displayAllStockData only for index(1).html
+    displayAllStockData();
+
+    </script>
+  </body>
+</html>
