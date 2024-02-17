@@ -1,195 +1,178 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PORTFOLIO</title>
-    <link rel="stylesheet" href="/styles.css" />
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-  </head>
-  <body>
-    <nav class="main-nav">
-      <div class="logo">
-        <img src="/logo1.png" alt="Loading.." />
-      </div>
-      <div class="menu-link">
-        <ul>
-          <li>
-            <a href="#">NEWS</a>
-            <ul class="dropdown">
-              <li><a href="#">IPO's</a></li>
-              <li><a href="#">Stocks</a></li>
-              <li><a href="#">Mutual Funds</a></li>
-            </ul>
-          </li>
-          <li>
-            <a href="#">LEARN</a>
-            <ul class="dropdown">
-              <li><a href="#">Online Trading</a></li>
-              <li><a href="#">Share Market</a></li>
-              <li><a href="#">Intraday Trading</a></li>
-            </ul>
-            
-          </li>
-          <li><a href="/watchlist/<%= id%>">WATCHLIST</a></li>
-        </ul>
-      </div>
-      <div class="menu-link2">
-        <ul>
-          <li><a href="#">Contact Us</a></li>
-          <li><a href="#">About Us</a></li>
-          <li><a href="#">Sign In/Join Now</a></li>
-        </ul>
-      </div>
-    </nav>
-    <h1>MY PORTFOLIO</h1>
-    <div id="returns">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PORTFOLIO</title>
+  <link rel="stylesheet" href="/styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+
+<body>
+  <nav class="main-nav">
+    <div class="logo">
+      <img src="/logo1.png" alt="Loading.." />
+    </div>
+    <div class="menu-link">
+      <ul>
+        <li>
+          <a href="#">NEWS</a>
+          <ul class="dropdown">
+            <li><a href="#">IPO's</a></li>
+            <li><a href="#">Stocks</a></li>
+            <li><a href="#">Mutual Funds</a></li>
+          </ul>
+        </li>
+        <li>
+          <a href="#">LEARN</a>
+          <ul class="dropdown">
+            <li><a href="#">Online Trading</a></li>
+            <li><a href="#">Share Market</a></li>
+            <li><a href="#">Intraday Trading</a></li>
+          </ul>
+
+        </li>
+        <li><a href="/watchlist/<%= id%>">WATCHLIST</a></li>
+      </ul>
+    </div>
+    <div class="menu-link2">
+      <ul>
+        <li><a href="#">Contact Us</a></li>
+        <li><a href="#">About Us</a></li>
+        <li><a href="#">Sign In/Join Now</a></li>
+      </ul>
+    </div>
+  </nav>
+  <h1>MY PORTFOLIO</h1>
+  <div id="returns">
     <h2> Invested:</h2>
     <p id="return">0</p>
     <h2 id="avgreturn">Returns:</h2>
     <p id="avg">0</p>
     <h2 id="percreturn">Return %:</h2>
     <p id="perc">0%</p>
-    </div>
-    <div id="portfolio" class="stock-container"></div>
+  </div>
+  <div id="portfolio" class="stock-container">
+
+    <% userdata.forEach(element=> { %>
+      <div class="stock-item">
+        <h2>
+          <%= element.symbol %>
+        </h2>
+        <p>Quantity: <%= element.quantity %>
+        </p>
+        <p>Purchase Price: <%= element.purchasePrice %>
+        </p>
+        <p id="<%= element.symbol %>Price">Loading price...</p>
+        <button onclick="removefromportfolio('<%= id %>' , '<%= element._id %>')">Delete</button>
+        
+        <script>
+
+          // Call fetchFinanceData and update the price placeholder
+          (async () => {
+            const symbol = '<%= element.symbol %>';
+            const priceElement = document.getElementById(`${symbol}Price`);
+
+            const financeData = await fetchFinanceData(symbol);
+            if (financeData) {
+              const currentPrice = financeData?.price?.regularMarketPrice?.fmt;
+              priceElement.textContent = `Current Price: ${currentPrice}`;
+            } else {
+              priceElement.textContent = 'Error fetching price';
+            }
+          })();
+
+          async function fetchFinanceData(symbol) {
+            const options = {
+              method: 'GET',
+              url: `https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/v2/get-summary`,
+              params: {
+                symbol: symbol,
+                region: 'IN'
+              },
+              headers: {
+                'X-RapidAPI-Key': '487eda1fa8msh7a9e5cedeee12bcp137eb0jsn25ff9cf41b02',
+                'X-RapidAPI-Host': 'apidojo-yahoo-finance-v1.p.rapidapi.com'
+              }
+            };
+
+            try {
+              const response = await axios.request(options);
+              return response.data; // Return the data for use in another function
+            } catch (error) {
+              console.error(error);
+              return null; // Return null if there was an error
+            }
+          }
+
+          async function removefromportfolio(userId, Id) {
+            try {
+              const response = await fetch(`/portfolio/${userId}/${Id}`, {
+                method: 'POST'
+              });
+              const updatedUserdata = await response.json();
+              console.log(updatedUserdata.length)
+              // Re-render the div with updated values
+              // document.getElementById('portfolio').innerHTML = '';
+              for (let i = 0; i < updatedUserdata.length; i++) {
+                const element = updatedUserdata[i];
+                console.log(element)
+                const stockItem = document.createElement('div');
+                stockItem.className = 'stock-item';
+                stockItem.innerHTML = `
+                <h2>${element.symbol}</h2>
+                <p>Quantity: ${element.quantity}</p>
+                <p>Purchase Price: ${element.purchasePrice}</p>
+                <p id="${element.symbol}Price">Loading price...</p>
+                <button onclick="removefromportfolio('${id}', '${element._id}')">Delete</button>
+              `;
+                document.getElementById('portfolio').appendChild(stockItem);
+            
+            }
+            } catch (error) {
+              console.error('Error removing stock item:', error);
+            }
+          }
+
+        </script>
+
+      </div>
+      <% }); %>
 
 
+  </div>
 
-    <!-- The script tag is placed at the end of the body -->
-    <script>
+  <script>
     const stockDataDiv = document.getElementById('stockData');
     const portfolioDiv = document.getElementById('portfolio');
     let totalInvested = 0;
     let totalReturns = 0;
     let percReturns = 0;
-    let pricelist={};
-
-
+    let pricelist = {};
 
     const stocks = ['A', 'AAL']; // Array of stock symbols 
-    async function fetchFinanceData(symbol) {
-      const options = {
-        method: 'GET',
-        url: `https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/v2/get-summary`,
-        params: {
-          symbol: symbol,
-          region: 'IN'
-        },
-        headers: {
-          'X-RapidAPI-Key': '487eda1fa8msh7a9e5cedeee12bcp137eb0jsn25ff9cf41b02',
-          'X-RapidAPI-Host': 'apidojo-yahoo-finance-v1.p.rapidapi.com'
-        }
-      };
 
-      try {
-        const response = await axios.request(options);
-        return response.data; // Return the data for use in another function
-      } catch (error) {
-        console.error(error);
-        return null; // Return null if there was an error
-      }
-    }
-
-    
     function updateDisplayValues() {
-        totalInvested=totalInvested.toFixed(2);
-        totalReturns=totalReturns.toFixed(2);
-        percReturns=(totalReturns/totalInvested)*100
-        document.getElementById('return').innerHTML = `$ ${totalInvested}`;
-        document.getElementById('avg').innerHTML = `$ ${totalReturns}`;
-        if(totalInvested>0){
-        document.getElementById('perc').innerHTML=`${percReturns.toFixed(2)}%`;
-        }
-        else{
-            document.getElementById('perc').innerHTML=`0%`;
-        }
-        localStorage.setItem('totalInvested', totalInvested);
+      totalInvested = totalInvested.toFixed(2);
+      totalReturns = totalReturns.toFixed(2);
+      percReturns = (totalReturns / totalInvested) * 100
+      document.getElementById('return').innerHTML = `$ ${totalInvested}`;
+      document.getElementById('avg').innerHTML = `$ ${totalReturns}`;
+      if (totalInvested > 0) {
+        document.getElementById('perc').innerHTML = `${percReturns.toFixed(2)}%`;
+      }
+      else {
+        document.getElementById('perc').innerHTML = `0%`;
+      }
+      localStorage.setItem('totalInvested', totalInvested);
       localStorage.setItem('totalReturns', totalReturns);
 
     }
-  const portfolioData = <%- JSON.stringify(userdata) %>;
-  const userId ="<%= id %>"
+
     // Load the portfolio data when the page loads
-   async function loadPortfolio() {
-    // Resetting totalInvested and totalReturns
-    totalInvested = 0;
-    totalReturns = 0;
-    try {
-        
-        if ( portfolioData.length > 0) {
-            const pricelist = JSON.parse(localStorage.getItem('pricelist')); // Assuming you still want to use this
 
-            // Loop through the portfolio data and calculate totalInvested and totalReturns
-            for (let portfolioItem of portfolioData) {
-                totalInvested += portfolioItem.purchasePrice * portfolioItem.quantity;
+  </script>
+</body>
 
-                if (pricelist[portfolioItem.symbol]) {
-                    totalReturns += (pricelist[portfolioItem.symbol] * portfolioItem.quantity) - (portfolioItem.purchasePrice * portfolioItem.quantity);
-                }
-
-                const { symbol, quantity, purchasePrice,_id } = portfolioItem;
-                if (symbol) {
-                    displayData1(symbol, quantity, purchasePrice,_id);
-                }
-            }
-
-            updateDisplayValues();
-        } else {
-            console.log("User not found or no portfolio data available.");
-        }
-    } catch (error) {
-        console.error("Error loading portfolio:", error);
-    }
-}
-
-
-    async function displayData1(symbol, quantity, purchasePrice,_id) {
-      // Create a container div for each stock item
-      
-      const stockItemDiv1 = document.createElement('div');
-      stockItemDiv1.classList.add('stock-item'); // Assume 'stock-item' is a class in your CSS
-      const data = await fetchFinanceData(symbol);
-
-      // Check if the necessary data is available and construct the inner HTML of the stock item
-      if (data.price.regularMarketPrice.fmt) {
-        const marketPrice = data.price.regularMarketPrice.fmt; // Formatted price
-        stockItemDiv1.innerHTML = `
-          <h2>${symbol}</h2>
-          <p>Price: ${marketPrice}</p>
-          <p>Quantity: ${quantity}</p>
-          <p>Purchase Price: ${purchasePrice}</p>`;
-        
-        // Create a button element to remove from portfolio
-        const removeButton = document.createElement('button');
-        removeButton.classList.add('but');
-        removeButton.textContent = 'Remove From Portfolio';
-     removeButton.addEventListener('click',async () => {
-      try {
-        const response = await fetch(`/portfolio/${userId}/${_id}`, {
-            method: 'POST'   
-        });
-        const json=await JSON.parse(response)
-        console.log(json);
-      } catch (error) {
-        console.error('Error removing stock item:', error);
-      }
-      const json=await JSON.parse(response)
-      console.log(json);
-      console.log("hey");
-    });
-
-        stockItemDiv1.appendChild(removeButton);
-        portfolioDiv.appendChild(stockItemDiv1);
-      } else {
-        stockItemDiv1.innerHTML = `
-          <h2>${symbol}</h2>
-          <p>No stock data available.</p>`;
-        
-        portfolioDiv.appendChild(stockItemDiv1);
-      }
-    }
-
-      loadPortfolio();
-    </script>
-  </body>
 </html>

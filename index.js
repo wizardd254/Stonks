@@ -101,7 +101,6 @@ app.get("/portfolio/:id", async (req, res) => {
             // If user not found, handle appropriately (e.g., return a 404 page)
             return res.status(404).send("User not found");
         }
-        console.log(user.portfolioData);
         res.render("portfolio", { userdata: user.portfolioData, id: req.params.id });
     } catch (error) {
         console.error("Error:", error);
@@ -116,8 +115,8 @@ app.post("/portfolio/:id/:stockId", async (req, res) => {
         const stockId = req.params.stockId;
         await user.updateOne({ $pull: { portfolioData: { _id: stockId } } });
         const senddata = await collection.findById(req.params.id);
+        console.log("remove api")
         res.json({userdata:senddata.portfolioData})
-        console.log("hey")
     } catch (error) {
         console.error("Error:", error);
         res.status(500).send("Internal Server Error");
