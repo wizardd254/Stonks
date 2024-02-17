@@ -115,6 +115,8 @@ app.post("/portfolio/:id/:stockId", async (req, res) => {
         const user = await collection.findById(id);
         const stockId = req.params.stockId;
         await user.updateOne({ $pull: { portfolioData: { _id: stockId } } });
+        const senddata = await collection.findById(req.params.id);
+        res.json({userdata:senddata.portfolioData})
         console.log("hey")
     } catch (error) {
         console.error("Error:", error);

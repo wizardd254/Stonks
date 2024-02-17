@@ -145,9 +145,11 @@
 
     async function displayData1(symbol, quantity, purchasePrice,_id) {
       // Create a container div for each stock item
+      
       const stockItemDiv1 = document.createElement('div');
       stockItemDiv1.classList.add('stock-item'); // Assume 'stock-item' is a class in your CSS
       const data = await fetchFinanceData(symbol);
+
       // Check if the necessary data is available and construct the inner HTML of the stock item
       if (data.price.regularMarketPrice.fmt) {
         const marketPrice = data.price.regularMarketPrice.fmt; // Formatted price
@@ -166,13 +168,13 @@
         const response = await fetch(`/portfolio/${userId}/${_id}`, {
             method: 'POST'   
         });
-        
+        const json=await JSON.parse(response)
+        console.log(json);
       } catch (error) {
         console.error('Error removing stock item:', error);
       }
-      await fetch(`/portfolio/${userId}`, {
-            method: 'GET'   
-        });
+      const json=await JSON.parse(response)
+      console.log(json);
       console.log("hey");
     });
 
