@@ -56,7 +56,7 @@
   <div id="portfolio" class="stock-container">
 
     <% userdata.forEach(element=> { %>
-      <div class="stock-item">
+      <div class="stock-item" id="item_<%= element._id %>">
         <h2>
           <%= element.symbol %>
         </h2>
@@ -66,8 +66,9 @@
         </p>
         <p id="<%= element.symbol %>Price">Loading price...</p>
         <button onclick="removefromportfolio('<%= id %>' , '<%= element._id %>')">Delete</button>
-        
-        <script>
+
+      </div>
+      <script>
 
           // Call fetchFinanceData and update the price placeholder
           (async () => {
@@ -84,18 +85,18 @@
           })();
 
           async function fetchFinanceData(symbol) {
-            const options = {
-              method: 'GET',
-              url: `https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/v2/get-summary`,
-              params: {
-                symbol: symbol,
-                region: 'IN'
-              },
-              headers: {
-                'X-RapidAPI-Key': '487eda1fa8msh7a9e5cedeee12bcp137eb0jsn25ff9cf41b02',
-                'X-RapidAPI-Host': 'apidojo-yahoo-finance-v1.p.rapidapi.com'
-              }
-            };
+          const options = {
+          method: 'GET',
+          url: 'https://yh-finance.p.rapidapi.com/stock/v2/get-summary',
+            params: {
+              symbol: symbol,
+              region: 'IN'
+            },
+            headers: {
+              'X-RapidAPI-Key': 'fdad38626fmsh32e31a9a57f05e8p1dab41jsnfe8f5b06efd1',
+              'X-RapidAPI-Host': 'yh-finance.p.rapidapi.com'
+            }
+          };
 
             try {
               const response = await axios.request(options);
@@ -112,32 +113,68 @@
                 method: 'POST'
               });
               const updatedUserdata = await response.json();
-              console.log(updatedUserdata.length)
-              // Re-render the div with updated values
-              // document.getElementById('portfolio').innerHTML = '';
-              for (let i = 0; i < updatedUserdata.length; i++) {
-                const element = updatedUserdata[i];
-                console.log(element)
-                const stockItem = document.createElement('div');
-                stockItem.className = 'stock-item';
-                stockItem.innerHTML = `
-                <h2>${element.symbol}</h2>
-                <p>Quantity: ${element.quantity}</p>
-                <p>Purchase Price: ${element.purchasePrice}</p>
-                <p id="${element.symbol}Price">Loading price...</p>
-                <button onclick="removefromportfolio('${id}', '${element._id}')">Delete</button>
-              `;
-                document.getElementById('portfolio').appendChild(stockItem);
-            
-            }
+              console.log(updatedUserdata.userdata)
+
+              const deletedItem = document.getElementById(`item_${Id}`);
+              deletedItem.parentNode.removeChild(deletedItem);
+              loadPortfolio(updatedUserdata.userdata)
+              updateDisplayValues();
+
             } catch (error) {
               console.error('Error removing stock item:', error);
             }
           }
 
-        </script>
+      const portfolioData = <%- JSON.stringify(userdata) %>;
+      const userId ="<%= id %>"
+        // Load the portfolio data when the page loads
+      async function loadPortfolio(portfolioData) {
+        // Resetting totalInvested and totalReturns
+        totalInvested = 0;
+        totalReturns = 0;
+        try {
+        
+        if ( portfolioData.length > 0) {
+            const pricelist = JSON.parse(localStorage.getItem('pricelist')); // Assuming you still want to use this
 
-      </div>
+            // Loop through the portfolio data and calculate totalInvested and totalReturns
+            for (let portfolioItem of portfolioData) {
+                totalInvested += portfolioItem.purchasePrice * portfolioItem.quantity;
+
+                if (pricelist[portfolioItem.symbol]) {
+                    totalReturns += (pricelist[portfolioItem.symbol] * portfolioItem.quantity) - (portfolioItem.purchasePrice * portfolioItem.quantity);
+                }
+            }
+
+            updateDisplayValues();
+        } else {
+            console.log("User not found or no portfolio data available.");
+        }
+       } catch (error) {
+        console.error("Error loading portfolio:", error);
+       }
+      }
+      function updateDisplayValues() {
+        totalInvested = totalInvested.toFixed(2);
+        totalReturns = totalReturns.toFixed(2);
+        percReturns = (totalReturns / totalInvested) * 100
+        document.getElementById('return').innerHTML = `$ ${totalInvested}`;
+        document.getElementById('avg').innerHTML = `$ ${totalReturns}`;
+        if (totalInvested > 0) {
+          document.getElementById('perc').innerHTML = `${percReturns.toFixed(2)}%`;
+        }
+        else {
+          document.getElementById('perc').innerHTML = `0%`;
+        }
+        localStorage.setItem('totalInvested', totalInvested);
+        localStorage.setItem('totalReturns', totalReturns);
+
+    }
+
+    loadPortfolio(portfolioData)
+
+
+        </script>
       <% }); %>
 
 

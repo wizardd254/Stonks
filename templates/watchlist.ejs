@@ -62,15 +62,15 @@
     const stocks = ['A', 'AAL']; // Array of stock symbols 
     async function fetchFinanceData(symbol) {
       const options = {
-        method: 'GET',
-        url: `https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/v2/get-summary`,
+       method: 'GET',
+       url: 'https://yh-finance.p.rapidapi.com/stock/v2/get-summary',
         params: {
           symbol: symbol,
           region: 'IN'
         },
         headers: {
-          'X-RapidAPI-Key': '487eda1fa8msh7a9e5cedeee12bcp137eb0jsn25ff9cf41b02',
-          'X-RapidAPI-Host': 'apidojo-yahoo-finance-v1.p.rapidapi.com'
+          'X-RapidAPI-Key': 'fdad38626fmsh32e31a9a57f05e8p1dab41jsnfe8f5b06efd1',
+          'X-RapidAPI-Host': 'yh-finance.p.rapidapi.com'
         }
       };
 
@@ -267,6 +267,7 @@
         }
       }
       
+
 
     // Conditionally call displayAllStockData only for index(1).html
     displayAllStockData();
