@@ -43,7 +43,6 @@ catch(err){
 })
 
 app.post("/login",async (req,res)=>{
-
     try {
         const check = await collection.findOne({name:req.body.name});
         if (check.password==req.body.password) {
@@ -57,8 +56,7 @@ app.post("/login",async (req,res)=>{
         console.log("invalid");
         res.redirect('/login');
     }
-   
-    
+      
 })
 
 // You need to add a GET route for login
@@ -122,6 +120,13 @@ app.post("/portfolio/:id/:stockId", async (req, res) => {
         res.status(500).send("Internal Server Error");
     }
 });
+
+app.get("/portfolio/:id/:symbol", async (req, res) => {
+   const id = req.params.id;
+   const symbol = req.params.symbol;
+   console.log("hi");
+   res.render("stockdata", { id: id, symbol: symbol });
+})
 
 app.listen(5000,()=>{
     console.log("port connected");

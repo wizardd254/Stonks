@@ -63,13 +63,14 @@
         <p>Quantity: <%= element.quantity %>
         </p>
         <p>Purchase Price: <%= element.purchasePrice %>
-        </p>
+        
         <p id="<%= element._id %>Price">Loading price...</p>
         <button onclick="removefromportfolio('<%= id %>' , '<%= element._id %>')">Delete</button>
+        <button onclick="stockPage('<%= element.symbol %>')">Stock Information</button>
 
       </div>
       <script>
-
+          
           // Call fetchFinanceData and update the price placeholder
           (async () => {
             const id='<%= element._id%>'
@@ -125,8 +126,40 @@
               console.error('Error removing stock item:', error);
             }
           }
+         
+          async function stockPage(symbol1) {
+          const uid ="<%= id %>"
+          const currentDate = new Date().toISOString().slice(0, 10);
 
-      
+          const url = `http://127.0.0.1:5000/?symbol=${symbol1}&date=${currentDate}`;
+
+          const response = await fetch(url, {
+              method: 'POST'
+          });
+
+          // Parse the JSON response
+          const responseData = await response.json();
+
+          // Access the data from the JSON response
+          const symbol2 = responseData.symbol;
+          const finalPred = responseData.final_pred;
+          const price = responseData.price;
+          const date = responseData.day;
+
+          // Now you can use symbol, finalPred, price, and date as needed
+          console.log("Symbol:", symbol2);
+          console.log("Final Prediction:", finalPred)
+
+           const priceStr = JSON.stringify(price);
+           const dateStr = JSON.stringify(date);
+
+            const url1 = `/portfolio/${uid}/${symbol2}?finalPred=${finalPred}&price=${priceStr}&date=${dateStr}`;
+           
+            // Send a redirect request to url1
+            window.location.replace(url1);
+
+          }
+          
 
 
         </script>
