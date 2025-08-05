@@ -1,7 +1,11 @@
 # Stonks
 
 ## Overview
-Stonks is a web application that leverages EJS, CSS, JavaScript, and HTML to provide users with an interactive experience. This project aims to simplify the process of managing stock data and provide insights into market trends.
+Stonks is a web application that leverages EJS, CSS, JavaScript, and HTML to provide users with an interactive experience. This project aims to simplify the process of managing stock data and provide valuable insights for investors.
+
+Engineered a cutting-edge LSTM (Long Short-Term Memory) neural network model, seamlessly integrating it with an interactive frontend to deliver highly accurate stock price predictions.
+- Conducted an in-depth analysis of LSTM’s gated architecture, mastering its ability to retain long-term dependencies and optimizing it for superior forecasting accuracy.
+- Designed and developed a feature-rich stock market intelligence platform, showcasing real-time price updates, dynamic portfolio analytics, and intuitive data visualizations for investors.
 
 ## Features
 - Dynamic rendering using EJS
@@ -40,4 +44,3 @@ Contributions are welcome! Please follow these steps to contribute:
 3. Make your changes and commit them (`git commit -m 'Add some feature'`).
 4. Push to the branch (`git push origin feature/YourFeature`).
 5. Open a Pull Request.
-
